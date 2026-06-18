@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gestión de Productos - Challenge PHP">
+    <title>Gestión de Productos</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gestión de Productos</h1>
+            <p>Challenge PHP - API REST</p>
+        </header>
+
+        <main>
+            <!-- Sección de mensajes -->
+            <div id="mensaje" class="mensaje" style="display: none;"></div>
+
+            <!-- Formulario de producto -->
+            <section class="card">
+                <h2>Agregar Producto</h2>
+                <form id="productoForm">
+                    <div class="form-group">
+                        <label for="nombre">Nombre:</label>
+                        <input type="text" id="nombre" name="nombre" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcion">Descripción:</label>
+                        <textarea id="descripcion" name="descripcion" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="precio">Precio (ARS):</label>
+                        <input type="number" id="precio" name="precio" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Guardar Producto</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Tabla de productos -->
+            <section class="card">
+                <h2>Lista de Productos</h2>
+                <div class="table-container">
+                    <table id="tablaProductos">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Precio (ARS)</th>
+                                <th>Precio (USD)</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaProductosBody">
+                            <tr>
+                                <td colspan="6" class="loading">Cargando productos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; Challenge PHP</p>
+        </footer>
+    </div>
+
+    <!-- Modal para editar producto -->
+    <div id="modalEditar" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Producto</h2>
+                <button class="modal-close" onclick="cerrarModal()">&times;</button>
+            </div>
+            <form id="editarForm">
+                <input type="hidden" id="editarId" value="">
+                
+                <div class="form-group">
+                    <label for="editarNombre">Nombre:</label>
+                    <input type="text" id="editarNombre" name="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editarDescripcion">Descripción:</label>
+                    <textarea id="editarDescripcion" name="descripcion" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="editarPrecio">Precio (ARS):</label>
+                    <input type="number" id="editarPrecio" name="precio" step="0.01" min="0" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Actualizar Producto</button>
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para eliminar -->
+    <div id="modalConfirmar" class="modal">
+        <div class="modal-content modal-confirm">
+            <div class="modal-header">
+                <h2>Confirmar eliminación</h2>
+                <button class="modal-close" onclick="cerrarModalConfirmar()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea eliminar este producto?</p>
+                <p class="modal-warning">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalConfirmar()">Cancelar</button>
+                <button class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/productos.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

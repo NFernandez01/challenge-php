@@ -1,0 +1,8 @@
+# Archivos de entorno
+.env
+backend/.env
+
+# Dependencias de PHP
+backend/vendor/
+vendor/
+composer.lock

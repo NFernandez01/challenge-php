@@ -1,0 +1,65 @@
+services:
+
+  backend:
+    build: ./backend
+    container_name: api_productos
+
+    ports:
+      - "8080:80"
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    env_file:
+      - ./backend/.env
+
+    volumes:
+      - ./backend/app:/var/www/html/app
+      - ./backend/public:/var/www/html/public
+      - ./backend/.env:/var/www/html/.env
+
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: frontend_productos
+
+    ports:
+      - "3000:80"
+
+    depends_on:
+      - backend
+
+    volumes:
+      - ./frontend/index.html:/usr/share/nginx/html/index.html
+      - ./frontend/css:/usr/share/nginx/html/css
+      - ./frontend/js:/usr/share/nginx/html/js
+
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8
+    container_name: mysql_productos
+
+    restart: unless-stopped
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: challenge
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  mysql_data:
