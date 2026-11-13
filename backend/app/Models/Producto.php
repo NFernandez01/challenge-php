@@ -1,78 +1,89 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Core\Database;
 use PDO;
 
-class Producto {
-    private $db;
+class Producto
+{
+    private const COLUMNAS = 'id, nombre, descripcion, precio, created_at, updated_at';
 
-    public function __construct()
+    private PDO $db;
+
+    // La conexión se puede inyectar (por ejemplo, una base de test); si no, usa la global
+    public function __construct(?PDO $db = null)
     {
-        $this->db = Database::getConnection();
+        $this->db = $db ?? Database::getConnection();
     }
 
-    public function getAll()
+    /** @return array<int, array<string, mixed>> */
+    public function getAll(): array
     {
-        $stmt = $this->db->prepare(
-            "SELECT * FROM productos ORDER BY created_at DESC"
+        $stmt = $this->db->query(
+            'SELECT ' . self::COLUMNAS . ' FROM productos ORDER BY created_at DESC, id DESC'
         );
 
+        return $stmt->fetchAll();
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getById(int $id): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT ' . self::COLUMNAS . ' FROM productos WHERE id = :id'
+        );
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // fetch() devuelve false si no hay filas: lo normalizamos a null
+        return $stmt->fetch() ?: null;
     }
 
-    public function getById($id)
+    /** @param array{nombre: string, descripcion: ?string, precio: string} $data */
+    public function create(array $data): int
     {
         $stmt = $this->db->prepare(
-            "SELECT * FROM productos WHERE id = :id"
+            'INSERT INTO productos (nombre, descripcion, precio) VALUES (:nombre, :descripcion, :precio)'
         );
-
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $this->bindDatos($stmt, $data);
         $stmt->execute();
 
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int) $this->db->lastInsertId();
     }
 
-    public function create($data)
+    /** @param array{nombre: string, descripcion: ?string, precio: string} $data */
+    public function update(int $id, array $data): void
     {
         $stmt = $this->db->prepare(
-            "INSERT INTO productos (nombre, descripcion, precio) VALUES (:nombre, :descripcion, :precio)"
+            'UPDATE productos SET nombre = :nombre, descripcion = :descripcion, precio = :precio WHERE id = :id'
         );
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $this->bindDatos($stmt, $data);
+        $stmt->execute();
+    }
 
-        $stmt->bindParam(':nombre', $data['nombre']);
-        $stmt->bindParam(':descripcion', $data['descripcion']);
-        $stmt->bindParam(':precio', $data['precio']);
-
+    /** Devuelve true si efectivamente se borró una fila. */
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare('DELETE FROM productos WHERE id = :id');
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
 
-        return $this->db->lastInsertId();
+        return $stmt->rowCount() > 0;
     }
 
-    public function update($id, $data)
+    private function bindDatos(\PDOStatement $stmt, array $data): void
     {
-        $stmt = $this->db->prepare(
-            "UPDATE productos SET nombre = :nombre, descripcion = :descripcion, precio = :precio WHERE id = :id"
+        $stmt->bindValue(':nombre', $data['nombre']);
+        $stmt->bindValue(
+            ':descripcion',
+            $data['descripcion'],
+            $data['descripcion'] === null ? PDO::PARAM_NULL : PDO::PARAM_STR
         );
-
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        $stmt->bindParam(':nombre', $data['nombre']);
-        $stmt->bindParam(':descripcion', $data['descripcion']);
-        $stmt->bindParam(':precio', $data['precio']);
-
-        return $stmt->execute();
-    }
-
-    public function delete($id)
-    {
-        $stmt = $this->db->prepare(
-            "DELETE FROM productos WHERE id = :id"
-        );
-
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-        return $stmt->execute();
+        // El precio viaja como string ("1234.50") para no perder precisión en el DECIMAL
+        $stmt->bindValue(':precio', $data['precio']);
     }
 }
