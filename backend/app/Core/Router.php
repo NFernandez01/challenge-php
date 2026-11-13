@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Core;
 
 use App\Controllers\ProductoController;
 
 class Router {
-   public function run()
+   public function run(): void
    {
       $method = $_SERVER['REQUEST_METHOD'];
 
@@ -19,7 +21,7 @@ class Router {
       
       // Parsear la ruta para obtener el ID si existe
       if (preg_match('#^/api/productos/(\d+)$#', $uri, $matches)) {
-         $id = $matches[1];
+         $id = (int) $matches[1];
          
          $controller = new ProductoController();
          
